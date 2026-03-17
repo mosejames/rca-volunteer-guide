@@ -173,6 +173,33 @@ The day name should match what's shown in the PDF header (e.g., "Friday March 13
 
 Return ONLY the JSON object. No explanation.`;
 
+// --- Apps Script caller (handles Google's redirect chain) ---
+async function callAppsScript(url, payload) {
+  // Step 1: POST to Apps Script, get the 302 redirect URL
+  const postResp = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+    redirect: 'manual'
+  });
+
+  // Step 2: Follow the redirect with a GET (Google switches POST to GET)
+  const location = postResp.headers.get('Location');
+  if (!location) {
+    const text = await postResp.text();
+    throw new Error(`No redirect from Apps Script: ${text.substring(0, 300)}`);
+  }
+
+  const resp = await fetch(location, { redirect: 'follow' });
+  const text = await resp.text();
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(`Apps Script returned non-JSON: ${text.substring(0, 300)}`);
+  }
+}
+
 // --- Sheet Write Handler (via Google Apps Script) ---
 async function handleWriteSheet(body, env) {
   const { tabName, rows, mode } = body;
@@ -181,27 +208,16 @@ async function handleWriteSheet(body, env) {
     return jsonResponse({ error: 'Missing tabName or rows' }, 400, env);
   }
 
-  const resp = await fetch(env.APPS_SCRIPT_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      action: 'write',
-      tabName,
-      rows,
-      headers: customHeaders,
-      mode: mode || 'replace'
-    }),
-    redirect: 'follow'
+  const result = await callAppsScript(env.APPS_SCRIPT_URL, {
+    action: 'write',
+    tabName,
+    rows,
+    headers: customHeaders,
+    mode: mode || 'replace'
   });
 
-  const text = await resp.text();
-  try {
-    const result = JSON.parse(text);
-    if (result.error) throw new Error(result.error);
-    return jsonResponse(result, 200, env);
-  } catch {
-    throw new Error(`Apps Script error: ${text.substring(0, 200)}`);
-  }
+  if (result.error) throw new Error(result.error);
+  return jsonResponse(result, 200, env);
 }
 
 // --- Template Duplication Handler (via Google Apps Script) ---
@@ -211,22 +227,11 @@ async function handleDuplicateTemplate(body, env) {
     return jsonResponse({ error: 'Missing newTabName' }, 400, env);
   }
 
-  const resp = await fetch(env.APPS_SCRIPT_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      action: 'duplicate-template',
-      newTabName
-    }),
-    redirect: 'follow'
+  const result = await callAppsScript(env.APPS_SCRIPT_URL, {
+    action: 'duplicate-template',
+    newTabName
   });
 
-  const text = await resp.text();
-  try {
-    const result = JSON.parse(text);
-    if (result.error) throw new Error(result.error);
-    return jsonResponse(result, 200, env);
-  } catch {
-    throw new Error(`Apps Script error: ${text.substring(0, 200)}`);
-  }
+  if (result.error) throw new Error(result.error);
+  return jsonResponse(result, 200, env);
 }
