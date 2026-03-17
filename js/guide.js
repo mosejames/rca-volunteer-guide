@@ -504,28 +504,54 @@ function generateDemoData() {
   };
 
   const blocks = [
-    { offset: 0,   dur: 15, groups: 'ALL',      location: 'Courtyard',  note: 'Arrivals',            flag: 'all' },
-    { offset: 15,  dur: 15, groups: 'ALL',      location: 'Houses',     note: '',                    flag: 'all' },
-    { offset: 30,  dur: 20, groups: 'ALL',      location: 'Auditorium', note: 'Cheers',              flag: 'all' },
-    { offset: 50,  dur: 25, groups: 'ABCDEFGH', location: '5a',         note: '',                    flag: '' },
-    { offset: 50,  dur: 25, groups: 'IJKL',     location: '7a',         note: '',                    flag: '' },
-    { offset: 75,  dur: 25, groups: 'ABCDEFGH', location: '4th',        note: '',                    flag: '' },
-    { offset: 75,  dur: 25, groups: 'IJKL',     location: '6th',        note: '',                    flag: '' },
-    { offset: 100, dur: 20, groups: 'ABCD',     location: '5aa',        note: '',                    flag: '' },
-    { offset: 100, dur: 20, groups: 'EFGH',     location: '8th',        note: '',                    flag: '' },
-    { offset: 100, dur: 20, groups: 'IJKL',     location: '7aa',        note: '',                    flag: '' },
-    { offset: 120, dur: 20, groups: 'CD',       location: '5a',         note: 'CD splits from ABCD', flag: 'split' },
-    { offset: 120, dur: 20, groups: 'AB',       location: '6th',        note: 'AB splits from ABCD', flag: 'split' },
-    { offset: 120, dur: 20, groups: 'EFGH',     location: '4th',        note: '',                    flag: '' },
-    { offset: 120, dur: 20, groups: 'IJKL',     location: 'Great Hall', note: '',                    flag: '' },
-    { offset: 140, dur: 25, groups: 'ALL',      location: 'Rotunda',    note: '',                    flag: 'all' },
-    { offset: 165, dur: 30, groups: 'ALL',      location: 'LUNCH',      note: '',                    flag: 'all' },
-    { offset: 195, dur: 25, groups: 'ABCDEFGH', location: '5aa',        note: '',                    flag: '' },
-    { offset: 195, dur: 25, groups: 'IJKL',     location: '8a',         note: '',                    flag: '' },
-    { offset: 220, dur: 25, groups: 'ABCDEFGH', location: '7th',        note: '',                    flag: '' },
-    { offset: 220, dur: 25, groups: 'IJKL',     location: '4th',        note: '',                    flag: '' },
-    { offset: 245, dur: 20, groups: 'ALL',      location: 'Rotunda',    note: 'Slide Certify',       flag: 'all' },
-    { offset: 265, dur: 30, groups: 'ALL',      location: 'Courtyard',  note: 'Cheers/Spin',         flag: 'all' },
+    // Opening - everyone together
+    { offset: 0,   dur: 15, groups: 'ALL',  location: 'Courtyard',  note: 'Arrivals',  flag: 'all' },
+    { offset: 15,  dur: 15, groups: 'ALL',  location: 'Houses',     note: '',          flag: 'all' },
+    { offset: 30,  dur: 20, groups: 'ALL',  location: 'Auditorium', note: 'Cheers',    flag: 'all' },
+
+    // First rotation - 4 groups in different rooms
+    { offset: 50,  dur: 25, groups: 'AB',   location: '5a',         note: '',          flag: '' },
+    { offset: 50,  dur: 25, groups: 'CD',   location: '4th',        note: '',          flag: '' },
+    { offset: 50,  dur: 25, groups: 'EFGH', location: '5aa',        note: '',          flag: '' },
+    { offset: 50,  dur: 25, groups: 'IJKL', location: '7a',         note: '',          flag: '' },
+
+    // Second rotation - groups swap rooms
+    { offset: 75,  dur: 25, groups: 'AB',   location: '4th',        note: '',          flag: '' },
+    { offset: 75,  dur: 25, groups: 'CD',   location: '6th',        note: '',          flag: '' },
+    { offset: 75,  dur: 25, groups: 'EFGH', location: '7a',         note: '',          flag: '' },
+    { offset: 75,  dur: 25, groups: 'IJKL', location: '8th',        note: '',          flag: '' },
+
+    // Third rotation - different split
+    { offset: 100, dur: 20, groups: 'ABCD', location: '5aa',        note: '',          flag: '' },
+    { offset: 100, dur: 20, groups: 'EF',   location: '8th',        note: '',          flag: '' },
+    { offset: 100, dur: 20, groups: 'GH',   location: 'Great Hall', note: '',          flag: '' },
+    { offset: 100, dur: 20, groups: 'IJ',   location: '7aa',        note: '',          flag: '' },
+    { offset: 100, dur: 20, groups: 'KL',   location: '6th',        note: '',          flag: '' },
+
+    // Split within groups
+    { offset: 120, dur: 20, groups: 'AB',   location: '6th',        note: 'AB splits from ABCD', flag: 'split' },
+    { offset: 120, dur: 20, groups: 'CD',   location: '5a',         note: 'CD splits from ABCD', flag: 'split' },
+    { offset: 120, dur: 20, groups: 'EFGH', location: '4th',        note: '',          flag: '' },
+    { offset: 120, dur: 20, groups: 'IJ',   location: 'Great Hall', note: '',          flag: '' },
+    { offset: 120, dur: 20, groups: 'KL',   location: 'Rotunda',    note: '',          flag: '' },
+
+    // All together - midday
+    { offset: 140, dur: 25, groups: 'ALL',  location: 'Auditorium', note: '',          flag: 'all' },
+    { offset: 165, dur: 30, groups: 'ALL',  location: 'LUNCH',      note: '',          flag: 'all' },
+
+    // Afternoon - different combos
+    { offset: 195, dur: 25, groups: 'ABEF', location: '5aa',        note: '',          flag: '' },
+    { offset: 195, dur: 25, groups: 'CDGH', location: '8a',         note: '',          flag: '' },
+    { offset: 195, dur: 25, groups: 'IJKL', location: '7th',        note: '',          flag: '' },
+
+    { offset: 220, dur: 25, groups: 'ABEF', location: '7th',        note: '',          flag: '' },
+    { offset: 220, dur: 25, groups: 'CDGH', location: '5aa',        note: '',          flag: '' },
+    { offset: 220, dur: 25, groups: 'IJ',   location: '4th',        note: '',          flag: '' },
+    { offset: 220, dur: 25, groups: 'KL',   location: '8a',         note: '',          flag: '' },
+
+    // Closing - everyone together
+    { offset: 245, dur: 20, groups: 'ALL',  location: 'Rotunda',    note: 'Slide Certify', flag: 'all' },
+    { offset: 265, dur: 30, groups: 'ALL',  location: 'Courtyard',  note: 'Cheers/Spin',   flag: 'all' },
   ];
 
   const schedule = [];
