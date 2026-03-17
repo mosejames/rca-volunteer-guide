@@ -19,6 +19,8 @@ let previousDataHash = '';
 
 // --- DOM refs ---
 const letterInput = document.getElementById('letterInput');
+const selectedDisplay = document.getElementById('selectedDisplay');
+const letterPicker = document.getElementById('letterPicker');
 const syncStatus = document.getElementById('syncStatus');
 const btnRefresh = document.getElementById('btnRefresh');
 const btnPrint = document.getElementById('btnPrint');
@@ -42,6 +44,12 @@ async function init() {
   if (saved) {
     letterInput.value = saved;
     selectedLetters = saved.toUpperCase().split('').filter(c => c >= 'A' && c <= 'L');
+    selectedDisplay.textContent = saved;
+    // Restore button states
+    selectedLetters.forEach(letter => {
+      const btn = letterPicker.querySelector(`[data-letter="${letter}"]`);
+      if (btn) btn.classList.add('selected');
+    });
   }
 
   await loadData();
@@ -388,12 +396,27 @@ function showBanner(type, message) {
 }
 
 // --- Event Listeners ---
-letterInput.addEventListener('input', () => {
-  const val = letterInput.value.toUpperCase().replace(/[^A-L]/g, '');
+
+// Letter picker buttons
+letterPicker.addEventListener('click', (e) => {
+  const btn = e.target.closest('.letter-btn');
+  if (!btn) return;
+  const letter = btn.dataset.letter;
+
+  btn.classList.toggle('selected');
+
+  // Rebuild selected letters from active buttons
+  selectedLetters = [];
+  letterPicker.querySelectorAll('.letter-btn.selected').forEach(b => {
+    selectedLetters.push(b.dataset.letter);
+  });
+
+  const val = selectedLetters.join('');
   letterInput.value = val;
-  selectedLetters = val.split('').filter(c => c >= 'A' && c <= 'L');
+  selectedDisplay.textContent = val || '';
   localStorage.setItem('rca_letters', val);
   render();
+  updateClock();
 });
 
 viewToggleEl.addEventListener('click', () => {

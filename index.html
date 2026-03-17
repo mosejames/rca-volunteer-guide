@@ -9,12 +9,30 @@
 <body>
 
   <div class="top-bar">
-    <input type="text" class="letter-input" id="letterInput"
-           placeholder="A-L" maxlength="12" autocomplete="off" autocapitalize="characters">
+    <span class="top-bar-label">My Group:</span>
+    <span class="selected-letters" id="selectedDisplay"></span>
     <span class="sync-status" id="syncStatus">Loading...</span>
     <button class="btn-refresh" id="btnRefresh" aria-label="Refresh">&#x21bb;</button>
     <button class="btn-print" id="btnPrint" aria-label="Print">&#x1F5A8;</button>
   </div>
+
+  <!-- Letter Picker -->
+  <div class="letter-picker" id="letterPicker">
+    <button class="letter-btn" data-letter="A">A</button>
+    <button class="letter-btn" data-letter="B">B</button>
+    <button class="letter-btn" data-letter="C">C</button>
+    <button class="letter-btn" data-letter="D">D</button>
+    <button class="letter-btn" data-letter="E">E</button>
+    <button class="letter-btn" data-letter="F">F</button>
+    <button class="letter-btn" data-letter="G">G</button>
+    <button class="letter-btn" data-letter="H">H</button>
+    <button class="letter-btn" data-letter="I">I</button>
+    <button class="letter-btn" data-letter="J">J</button>
+    <button class="letter-btn" data-letter="K">K</button>
+    <button class="letter-btn" data-letter="L">L</button>
+  </div>
+
+  <input type="hidden" id="letterInput">
 
   <!-- Live Clock & Countdown -->
   <div class="clock-bar" id="clockBar"></div>
