@@ -31,9 +31,13 @@ const lookupPanel = document.getElementById('lookupPanel');
 const lookupInput = document.getElementById('lookupInput');
 const lookupResult = document.getElementById('lookupResult');
 const timeline = document.getElementById('timeline');
+const clockBar = document.getElementById('clockBar');
 
 // --- Init ---
 async function init() {
+  updateClock();
+  setInterval(updateClock, 1000);
+
   const saved = localStorage.getItem('rca_letters');
   if (saved) {
     letterInput.value = saved;
@@ -296,6 +300,58 @@ function startPolling() {
       updateSyncStatus();
     }
   }, CONFIG.POLL_INTERVAL);
+}
+
+function updateClock() {
+  const now = new Date();
+  const h = now.getHours();
+  const m = String(now.getMinutes()).padStart(2, '0');
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  const timeStr = `${h12}:${m} ${ampm}`;
+
+  // Find next block for countdown
+  const nowTimeStr = getCurrentTimeStr(now);
+  let countdownHtml = '';
+
+  if (selectedLetters.length > 0 && currentDay && allSchedule.length > 0) {
+    const daySchedule = filterByDay(allSchedule, currentDay);
+    let mySchedule = filterByLetters(daySchedule, selectedLetters);
+    mySchedule = dedup(mySchedule);
+
+    const current = findCurrentBlock(mySchedule, currentDay, nowTimeStr);
+    const next = findNextBlock(mySchedule, currentDay, nowTimeStr);
+
+    if (current && next) {
+      const mins = minutesUntil(next.timeStart, nowTimeStr);
+      const loc = resolveLocation(next.location, locations);
+      countdownHtml = `
+        <div style="text-align:center;">
+          <div class="clock-countdown-label">Next up in</div>
+          <div class="clock-countdown">${mins} min — ${loc.display_name}</div>
+        </div>`;
+    } else if (next && !current) {
+      const mins = minutesUntil(next.timeStart, nowTimeStr);
+      const loc = resolveLocation(next.location, locations);
+      countdownHtml = `
+        <div style="text-align:center;">
+          <div class="clock-countdown-label">Starting in</div>
+          <div class="clock-countdown">${mins} min — ${loc.display_name}</div>
+        </div>`;
+    } else if (current && !next) {
+      countdownHtml = `
+        <div style="text-align:center;">
+          <div class="clock-countdown-label">Last session</div>
+          <div class="clock-countdown">Ends at ${current.timeEnd}</div>
+        </div>`;
+    }
+  }
+
+  clockBar.innerHTML = `
+    <div style="text-align:center;">
+      <div class="clock-time">${timeStr}</div>
+    </div>
+    ${countdownHtml}`;
 }
 
 function updateSyncStatus() {

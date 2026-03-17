@@ -25,6 +25,38 @@ body {
   -webkit-text-size-adjust: 100%;
 }
 
+/* Clock Bar */
+.clock-bar {
+  background: var(--navy);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.clock-time {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.clock-countdown {
+  font-size: 14px;
+  color: var(--gold);
+  font-weight: 600;
+}
+
+.clock-countdown-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
 .top-bar {
   background: var(--navy-mid);
   padding: 12px 16px;
@@ -324,7 +356,7 @@ body {
 }
 
 @media print {
-  .top-bar, .day-toggle, .view-toggle, .lookup-link,
+  .top-bar, .clock-bar, .day-toggle, .view-toggle, .lookup-link,
   .lookup-panel, .btn-refresh, .btn-print, .sync-status,
   .banner { display: none !important; }
 
