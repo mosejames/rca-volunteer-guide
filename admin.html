@@ -21,31 +21,41 @@
   <div id="adminHub" style="display:none;">
     <h1>RCA Schedule Admin</h1>
 
+    <p style="color:var(--text-secondary);font-size:14px;margin-bottom:20px;">
+      Choose how to get schedule data into the system. The volunteer guide reads directly from the Google Sheet, so any method that gets the data there works.
+    </p>
+
     <div class="hub-grid">
-      <div class="hub-card" data-action="pdf">
-        <div class="hub-card-icon">&#128196;</div>
-        <div class="hub-card-title">Upload PDF</div>
-        <div class="hub-card-desc">Parse a schedule PDF using AI</div>
-      </div>
       <div class="hub-card" data-action="excel">
         <div class="hub-card-icon">&#128202;</div>
         <div class="hub-card-title">Upload Excel/CSV</div>
-        <div class="hub-card-desc">Import from a spreadsheet file</div>
+        <div class="hub-card-desc">Best option. Import directly from the working spreadsheet.</div>
       </div>
       <div class="hub-card" data-action="template">
         <div class="hub-card-icon">&#128203;</div>
         <div class="hub-card-title">Start from Template</div>
-        <div class="hub-card-desc">Create a new day from the template</div>
+        <div class="hub-card-desc">Create a blank schedule for a new date and fill it in manually.</div>
+      </div>
+      <div class="hub-card" data-action="pdf">
+        <div class="hub-card-icon">&#128196;</div>
+        <div class="hub-card-title">Upload PDF</div>
+        <div class="hub-card-desc">AI-assisted. Use when a spreadsheet file isn't available. Requires review.</div>
       </div>
     </div>
 
     <div class="sheet-link">
-      Or <a id="sheetLink" href="#" target="_blank">open Google Sheet directly</a>
+      Or <a id="sheetLink" href="#" target="_blank">open Google Sheet directly</a> and enter data by hand
     </div>
 
     <div id="sectionPdf" class="admin-section">
       <div class="back-link" data-back>&#8592; Back</div>
       <h2>Upload Schedule PDF</h2>
+      <p style="color:var(--text-secondary);font-size:14px;margin-bottom:8px;">
+        AI reads the PDF and extracts the schedule grid into structured data. This works best as a starting point, not a finished product.
+      </p>
+      <p style="color:var(--amber);font-size:13px;margin-bottom:16px;">
+        The schedule grid is complex. Expect the AI to get the general structure right but miss details on group assignments, split locations, or combined time blocks. Always review the preview table carefully and correct anything that looks off before pushing.
+      </p>
       <div class="upload-area" id="pdfDropZone">
         <div class="upload-area-text">Drop PDF here or click to select</div>
         <input type="file" id="pdfFileInput" accept=".pdf" style="display:none;">
@@ -56,6 +66,11 @@
     <div id="sectionExcel" class="admin-section">
       <div class="back-link" data-back>&#8592; Back</div>
       <h2>Upload Excel or CSV</h2>
+      <p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px;">
+        Upload the working spreadsheet (.xlsx or .csv). The file should have columns matching this format:
+        <strong>day, time_start, time_end, groups, location, note, flag</strong>.
+        Column headers are matched automatically. After upload, you can review and edit before pushing to the live sheet.
+      </p>
       <div class="upload-area" id="excelDropZone">
         <div class="upload-area-text">Drop .xlsx or .csv file here or click to select</div>
         <input type="file" id="excelFileInput" accept=".xlsx,.csv" style="display:none;">
@@ -67,7 +82,7 @@
       <div class="back-link" data-back>&#8592; Back</div>
       <h2>Create from Template</h2>
       <p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px;">
-        This duplicates the TEMPLATE tab and renames it for the new date.
+        Creates a new tab in the Google Sheet by copying the TEMPLATE tab. The template has the standard time block skeleton already filled in. Pick the date, click Create, then open the sheet to fill in group assignments and locations.
       </p>
       <div class="template-form">
         <input type="date" id="templateDatePicker" style="width:180px;">
@@ -82,7 +97,7 @@
       <div class="back-link" data-back>&#8592; Back</div>
       <h2>Preview &amp; Edit</h2>
       <p style="color:var(--text-secondary);font-size:14px;margin-bottom:12px;">
-        Review the parsed data. Click any cell to edit. Amber rows have unrecognized locations.
+        Review the parsed data below. Click any cell to edit it directly. Use the + Add Row button to fill in anything that was missed. When it looks right, pick the date and push to the Google Sheet. The volunteer guide will pick up the new data within 45 seconds.
       </p>
       <div id="previewTableWrap"></div>
       <div style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
