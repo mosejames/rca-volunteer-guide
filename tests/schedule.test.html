@@ -1,11 +1,84 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>schedule.js Tests</title>
-</head>
+<html><head><title>Schedule Tests</title></head>
 <body>
-  <pre id="output"></pre>
-</body>
-</html>
+<pre id="output"></pre>
+<script type="module">
+import { filterByLetters, filterByDay, dedup, findCurrentBlock, findNextBlock, getAvailableDays, detectDay, parseTime, minutesUntil, resolveLocation } from '../js/schedule.js';
+
+const log = (msg) => document.getElementById('output').textContent += msg + '\n';
+let pass = 0, fail = 0;
+function assert(condition, name) {
+  if (condition) { pass++; log(`✓ ${name}`); }
+  else { fail++; log(`✗ ${name}`); }
+}
+
+const schedule = [
+  { day: 'Friday March 13', timeStart: '8:00', timeEnd: '8:15', groups: 'ALL', groupList: ['ALL'], location: 'Courtyard', note: '', flag: 'all' },
+  { day: 'Friday March 13', timeStart: '9:05', timeEnd: '9:30', groups: 'ABCD', groupList: ['A','B','C','D'], location: '5a', note: '', flag: '' },
+  { day: 'Friday March 13', timeStart: '9:05', timeEnd: '9:30', groups: 'IJKL', groupList: ['I','J','K','L'], location: '7a', note: '', flag: '' },
+  { day: 'Friday March 13', timeStart: '10:30', timeEnd: '10:45', groups: 'ABCDEFGH', groupList: ['A','B','C','D','E','F','G','H'], location: '4th', note: '', flag: '' },
+  { day: 'Friday March 13', timeStart: '11:00', timeEnd: '11:10', groups: 'CD', groupList: ['C','D'], location: '5aa', note: 'CD splits', flag: 'split' },
+  { day: 'Friday March 13', timeStart: '11:00', timeEnd: '11:10', groups: 'AB', groupList: ['A','B'], location: '6th', note: 'AB splits', flag: 'split' },
+  { day: 'Thursday March 12', timeStart: '8:15', timeEnd: '8:45', groups: 'ALL', groupList: ['ALL'], location: 'Houses', note: '', flag: 'all' },
+];
+
+// Filter by single letter
+const forA = filterByLetters(schedule, ['A']);
+assert(forA.length === 5, 'filter A: 5 blocks (ALL+ABCD+ABCDEFGH+AB+ThuALL)');
+
+const forZ = filterByLetters(schedule, ['Z']);
+assert(forZ.length === 2, 'filter Z: only ALL blocks');
+
+// Filter by day
+const fri = filterByDay(schedule, 'Friday March 13');
+assert(fri.length === 6, 'filterByDay Friday: 6 entries');
+
+// Dedup for CD
+const forCD = filterByLetters(schedule, ['C', 'D']);
+assert(forCD.some(b => b.groups === 'CD'), 'CD block included for CD');
+assert(!forCD.some(b => b.groups === 'AB'), 'AB block excluded for CD');
+
+const dedupedCD = dedup(forCD);
+const at905 = dedupedCD.filter(b => b.timeStart === '9:05');
+assert(at905.length === 1, 'dedup: ABCD at 9:05 appears once for CD');
+
+// Available days
+const days = getAvailableDays(schedule);
+assert(days.length === 2, 'two days available');
+assert(days.includes('Friday March 13'), 'Friday found');
+assert(days.includes('Thursday March 12'), 'Thursday found');
+
+// Current block detection
+const current = findCurrentBlock(schedule, 'Friday March 13', '9:10');
+assert(current !== null, 'current block found at 9:10');
+assert(current.timeStart === '9:05', 'current block starts at 9:05');
+
+const before = findCurrentBlock(schedule, 'Friday March 13', '7:00');
+assert(before === null, 'no current block at 7:00');
+
+// Next block detection
+const next = findNextBlock(schedule, 'Friday March 13', '9:10');
+assert(next !== null, 'next block found after 9:10');
+assert(next.timeStart === '10:30', 'next block starts at 10:30');
+
+// parseTime
+assert(parseTime('8:15') === 495, 'parseTime 8:15 = 495');
+assert(parseTime('13:00') === 780, 'parseTime 13:00 = 780');
+
+// minutesUntil
+assert(minutesUntil('10:30', '9:10') === 80, 'minutesUntil 10:30 from 9:10 = 80');
+
+// resolveLocation
+const locs = { great_hall: { display_name: 'Great Hall', hint: '1st floor' } };
+assert(resolveLocation('great_hall', locs).hint === '1st floor', 'exact key match');
+assert(resolveLocation('Great Hall', locs).hint === '1st floor', 'normalized match');
+assert(resolveLocation('unknown', locs).display_name === 'unknown', 'fallback for unknown');
+
+// detectDay
+const thu = new Date(2026, 2, 12); // Thursday March 12, 2026
+assert(detectDay(['Thursday March 12', 'Friday March 13'], thu) === 'Thursday March 12', 'detectDay matches Thursday');
+assert(detectDay(['Friday March 13'], thu) === 'Friday March 13', 'detectDay falls back to first');
+
+log(`\n${pass} passed, ${fail} failed`);
+</script>
+</body></html>
