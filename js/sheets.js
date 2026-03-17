@@ -78,7 +78,7 @@ export function parseScheduleRows(rows) {
     groups: row.groups || '',
     groupList: expandGroups(row.groups),
     location: row.location || '',
-    note: row.note || '',
+    note: row.note || row.notes || '',
     flag: row.flag || ''
   }));
 }

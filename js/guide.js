@@ -88,19 +88,29 @@ async function loadData() {
 }
 
 async function fetchAllDayTabs() {
+  // Check for ?tab= URL parameter to force specific tab(s)
+  const urlParams = new URLSearchParams(window.location.search);
+  const forcedTabs = urlParams.get('tab');
+
   const now = new Date();
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
   const candidates = [];
-  for (let offset = -3; offset <= 7; offset++) {
-    const d = new Date(now);
-    d.setDate(d.getDate() + offset);
-    const dayOfWeek = d.getDay();
-    if (dayOfWeek === 4 || dayOfWeek === 5) {
-      const tabName = `${dayNames[dayOfWeek]} ${monthNames[d.getMonth()]} ${d.getDate()}`;
-      candidates.push(tabName);
+
+  if (forcedTabs) {
+    // Support comma-separated tab names: ?tab=Thu Mar 12,Fri Mar 13
+    forcedTabs.split(',').forEach(t => candidates.push(t.trim()));
+  } else {
+    for (let offset = -3; offset <= 7; offset++) {
+      const d = new Date(now);
+      d.setDate(d.getDate() + offset);
+      const dayOfWeek = d.getDay();
+      if (dayOfWeek === 4 || dayOfWeek === 5) {
+        const tabName = `${dayNames[dayOfWeek]} ${monthNames[d.getMonth()]} ${d.getDate()}`;
+        candidates.push(tabName);
+      }
     }
   }
 

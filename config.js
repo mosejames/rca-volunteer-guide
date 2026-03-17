@@ -1,6 +1,6 @@
 // config.js — No secrets. Committed to repo.
 export const CONFIG = {
-  SHEET_ID: 'YOUR_SHEET_ID_HERE',
+  SHEET_ID: '1Jz_WyOL3zsSAu35m62zyuIzIYsAwmxz9IDGxE9SClAg',
   WORKER_URL: 'https://rca-guide-worker.YOUR_SUBDOMAIN.workers.dev',
   POLL_INTERVAL: 45000,
   get CSV_BASE() {
