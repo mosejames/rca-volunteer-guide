@@ -1,11 +1,64 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>sheets.js Tests</title>
-</head>
+<html><head><title>Sheets Tests</title></head>
 <body>
-  <pre id="output"></pre>
-</body>
-</html>
+<pre id="output"></pre>
+<script type="module">
+import { parseCSV, parseScheduleRows, parseLocations, expandGroups } from '../js/sheets.js';
+
+const log = (msg) => document.getElementById('output').textContent += msg + '\n';
+let pass = 0, fail = 0;
+
+function assert(condition, name) {
+  if (condition) { pass++; log(`✓ ${name}`); }
+  else { fail++; log(`✗ ${name}`); }
+}
+
+// Test CSV parsing
+const csv = `day,time_start,time_end,groups,location,note,flag
+Thursday March 12,8:15,8:45,ALL,Houses,,all
+Thursday March 12,9:40,10:00,ABCDEFGH,5aa,,
+Thursday March 12,10:30,10:40,ABCD,5a,"CD splits from ABCDEFGH",split`;
+
+const rows = parseCSV(csv);
+assert(rows.length === 3, 'parseCSV returns 3 rows');
+assert(rows[0].day === 'Thursday March 12', 'first row day');
+assert(rows[0].time_start === '8:15', 'first row time_start');
+assert(rows[0].groups === 'ALL', 'first row groups');
+assert(rows[0].flag === 'all', 'first row flag');
+assert(rows[2].note === 'CD splits from ABCDEFGH', 'third row note with quotes');
+
+// Test expandGroups
+assert(expandGroups('ABCDEFGH').length === 8, 'ABCDEFGH = 8 letters');
+assert(expandGroups('ALL')[0] === 'ALL', 'ALL stays as ALL');
+assert(expandGroups('').length === 0, 'empty returns empty');
+assert(expandGroups('CD').length === 2, 'CD = 2 letters');
+
+// Test schedule row parsing
+const schedule = parseScheduleRows(rows);
+assert(schedule.length === 3, 'parseScheduleRows returns 3 entries');
+assert(Array.isArray(schedule[0].groupList), 'groupList is array');
+assert(schedule[0].groupList[0] === 'ALL', 'ALL group parsed');
+assert(schedule[1].groupList.includes('A'), 'ABCDEFGH includes A');
+assert(schedule[1].groupList.includes('H'), 'ABCDEFGH includes H');
+assert(!schedule[1].groupList.includes('I'), 'ABCDEFGH excludes I');
+assert(schedule[2].timeStart === '10:30', 'timeStart parsed');
+assert(schedule[2].timeEnd === '10:40', 'timeEnd parsed');
+
+// Test locations parsing
+const locCSV = `location_key,display_name,hint
+great_hall,Great Hall,1st floor main building
+rotunda,Rotunda,center of building`;
+
+const locs = parseLocations(parseCSV(locCSV));
+assert(locs['great_hall'].hint === '1st floor main building', 'location hint');
+assert(locs['rotunda'].display_name === 'Rotunda', 'location display_name');
+
+// CSV edge cases
+const edgeCsv = `a,b\n"hello, world",test\n"say ""hi""",val`;
+const edgeRows = parseCSV(edgeCsv);
+assert(edgeRows[0].a === 'hello, world', 'quoted field with comma');
+assert(edgeRows[1].a === 'say "hi"', 'escaped quotes');
+
+log(`\n${pass} passed, ${fail} failed`);
+</script>
+</body></html>
