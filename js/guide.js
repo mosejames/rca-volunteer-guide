@@ -50,6 +50,22 @@ async function init() {
 }
 
 async function loadData() {
+  // Demo mode: generate schedule relative to current time
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('demo') === 'true') {
+    const demo = generateDemoData();
+    allSchedule = demo.schedule;
+    locations = demo.locations;
+    lastFetchTime = Date.now();
+    previousDataHash = JSON.stringify(allSchedule);
+    const days = getAvailableDays(allSchedule);
+    currentDay = days[0];
+    setupDayToggle(days);
+    render();
+    updateSyncStatus();
+    return;
+  }
+
   try {
     bannerArea.innerHTML = '';
     const [scheduleRows, locs] = await Promise.all([
@@ -435,6 +451,88 @@ lookupInput.addEventListener('input', () => {
   }
   lookupResult.innerHTML = html;
 });
+
+// --- Demo Mode ---
+function generateDemoData() {
+  const now = new Date();
+  const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const monthNames = ['January','February','March','April','May','June',
+    'July','August','September','October','November','December'];
+  const day = `${dayNames[now.getDay()]} ${monthNames[now.getMonth()]} ${now.getDate()}`;
+
+  // Start 15 minutes ago so there's always an active block
+  const startMin = now.getHours() * 60 + now.getMinutes() - 15;
+
+  const fmt = (totalMin) => {
+    const hh = Math.floor(totalMin / 60) % 24;
+    const mm = totalMin % 60;
+    return `${hh}:${String(mm).padStart(2, '0')}`;
+  };
+
+  const blocks = [
+    { offset: 0,   dur: 15, groups: 'ALL',      location: 'Courtyard',  note: 'Arrivals',            flag: 'all' },
+    { offset: 15,  dur: 15, groups: 'ALL',      location: 'Houses',     note: '',                    flag: 'all' },
+    { offset: 30,  dur: 20, groups: 'ALL',      location: 'Auditorium', note: 'Cheers',              flag: 'all' },
+    { offset: 50,  dur: 25, groups: 'ABCDEFGH', location: '5a',         note: '',                    flag: '' },
+    { offset: 50,  dur: 25, groups: 'IJKL',     location: '7a',         note: '',                    flag: '' },
+    { offset: 75,  dur: 25, groups: 'ABCDEFGH', location: '4th',        note: '',                    flag: '' },
+    { offset: 75,  dur: 25, groups: 'IJKL',     location: '6th',        note: '',                    flag: '' },
+    { offset: 100, dur: 20, groups: 'ABCD',     location: '5aa',        note: '',                    flag: '' },
+    { offset: 100, dur: 20, groups: 'EFGH',     location: '8th',        note: '',                    flag: '' },
+    { offset: 100, dur: 20, groups: 'IJKL',     location: '7aa',        note: '',                    flag: '' },
+    { offset: 120, dur: 20, groups: 'CD',       location: '5a',         note: 'CD splits from ABCD', flag: 'split' },
+    { offset: 120, dur: 20, groups: 'AB',       location: '6th',        note: 'AB splits from ABCD', flag: 'split' },
+    { offset: 120, dur: 20, groups: 'EFGH',     location: '4th',        note: '',                    flag: '' },
+    { offset: 120, dur: 20, groups: 'IJKL',     location: 'Great Hall', note: '',                    flag: '' },
+    { offset: 140, dur: 25, groups: 'ALL',      location: 'Rotunda',    note: '',                    flag: 'all' },
+    { offset: 165, dur: 30, groups: 'ALL',      location: 'LUNCH',      note: '',                    flag: 'all' },
+    { offset: 195, dur: 25, groups: 'ABCDEFGH', location: '5aa',        note: '',                    flag: '' },
+    { offset: 195, dur: 25, groups: 'IJKL',     location: '8a',         note: '',                    flag: '' },
+    { offset: 220, dur: 25, groups: 'ABCDEFGH', location: '7th',        note: '',                    flag: '' },
+    { offset: 220, dur: 25, groups: 'IJKL',     location: '4th',        note: '',                    flag: '' },
+    { offset: 245, dur: 20, groups: 'ALL',      location: 'Rotunda',    note: 'Slide Certify',       flag: 'all' },
+    { offset: 265, dur: 30, groups: 'ALL',      location: 'Courtyard',  note: 'Cheers/Spin',         flag: 'all' },
+  ];
+
+  const schedule = [];
+  const { expandGroups } = { expandGroups: (g) => {
+    if (!g) return [];
+    if (g === 'ALL') return ['ALL'];
+    return g.split('').filter(c => c >= 'A' && c <= 'Z');
+  }};
+
+  blocks.forEach(b => {
+    schedule.push({
+      day,
+      timeStart: fmt(startMin + b.offset),
+      timeEnd: fmt(startMin + b.offset + b.dur),
+      groups: b.groups,
+      groupList: expandGroups(b.groups),
+      location: b.location,
+      note: b.note,
+      flag: b.flag,
+    });
+  });
+
+  const locations = {
+    courtyard:    { display_name: 'Courtyard',       hint: 'outside, main entrance' },
+    great_hall:   { display_name: 'Great Hall',      hint: '1st floor, main building' },
+    rotunda:      { display_name: 'Rotunda',         hint: 'center of building' },
+    auditorium:   { display_name: 'Auditorium',      hint: 'main building' },
+    houses:       { display_name: 'Houses',          hint: 'homeroom classrooms' },
+    '4th':        { display_name: '4th Grade Room',  hint: 'classroom' },
+    '5a':         { display_name: '5a Classroom',    hint: 'classroom' },
+    '5aa':        { display_name: '5aa Classroom',   hint: 'classroom' },
+    '6th':        { display_name: '6th Grade Room',  hint: 'classroom' },
+    '7a':         { display_name: '7a Classroom',    hint: 'classroom' },
+    '7aa':        { display_name: '7aa Classroom',   hint: 'classroom' },
+    '7th':        { display_name: '7th Grade Room',  hint: 'classroom' },
+    '8a':         { display_name: '8a Classroom',    hint: 'classroom' },
+    '8th':        { display_name: '8th Grade Room',  hint: 'classroom' },
+  };
+
+  return { schedule, locations };
+}
 
 // --- Start ---
 init();
