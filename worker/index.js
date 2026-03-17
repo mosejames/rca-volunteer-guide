@@ -73,7 +73,7 @@ async function handleParsePDF(body, env) {
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-5-20241022',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 8192,
       messages: [{
         role: 'user',
@@ -101,10 +101,24 @@ async function handleParsePDF(body, env) {
   if (!textContent) throw new Error('No text response from API');
 
   let jsonStr = textContent.text;
-  const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (jsonMatch) jsonStr = jsonMatch[1];
 
-  const parsed = JSON.parse(jsonStr.trim());
+  // Strip markdown code blocks (```json ... ``` or ``` ... ```)
+  const codeBlockMatch = jsonStr.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/);
+  if (codeBlockMatch) {
+    jsonStr = codeBlockMatch[1];
+  }
+
+  // If still not valid JSON, try to find the first { and last }
+  jsonStr = jsonStr.trim();
+  if (!jsonStr.startsWith('{')) {
+    const firstBrace = jsonStr.indexOf('{');
+    const lastBrace = jsonStr.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace !== -1) {
+      jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
+    }
+  }
+
+  const parsed = JSON.parse(jsonStr);
   return jsonResponse(parsed, 200, env);
 }
 
@@ -154,24 +168,20 @@ Extract into this EXACT JSON format:
   ]
 }
 
-For the schedule array:
-- Create one row per TIME BLOCK per LETTER GROUP ASSIGNMENT
-- If ABCDEFGH is in 5aa and IJKL is in 7a at the same time, that's TWO rows
+IMPORTANT - KEEP OUTPUT COMPACT:
+- ONLY include rows where letter groups appear (ABCDEFGH, IJKL, ABCD, EFGH, AB, CD, ALL, etc.)
+- SKIP rows that are staff-only (no letter group assignment)
+- SKIP LUNCH rows unless ALL groups are at lunch
+- Combine consecutive time blocks with the same group+location into one row
+- For the duties array, include only 5-10 key entries (morning duties and carpool). Skip the detailed station list.
 - The "location" should be the classroom/area name (5a, 5aa, Great Hall, Courtyard, etc.)
 - Set flag to "all" when groups is "ALL"
-- Set flag to "split" when a larger group divides (e.g., ABCD splits from ABCDEFGH)
-- Set flag to "merge" when groups combine
+- Set flag to "split" when a group divides
 - Leave flag empty for normal assignments
-- LUNCH blocks: include them with location "LUNCH"
-- ALL blocks (Cheers, Slide, Rotunda, etc.): include with the actual location
 
-For the duties array:
-- Extract all morning duties, station assignments, slide certify roles, carpool duties
-- These are from the section BELOW the main schedule grid
+The day name should match the PDF header (e.g., "Friday March 13").
 
-The day name should match what's shown in the PDF header (e.g., "Friday March 13" or "Thursday March 12").
-
-Return ONLY the JSON object. No explanation.`;
+Return ONLY the JSON object. No markdown, no explanation, no code blocks.`;
 
 // --- Apps Script caller (handles Google's redirect chain) ---
 async function callAppsScript(url, payload) {

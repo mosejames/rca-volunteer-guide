@@ -113,12 +113,19 @@ async function handlePDFUpload(file) {
 
       pdfStatus.innerHTML = `<div class="status-msg status-success">Parsed ${parsedSchedule.length} schedule rows and ${parsedDuties.length} duty rows</div>`;
 
-      if (parsedSchedule.length > 0) {
-        const day = parsedSchedule[0].day || '';
-        const parts = day.split(' ');
-        if (parts.length >= 3) {
-          document.getElementById('targetTabName').value = `${parts[0].substring(0, 3)} ${parts[1]} ${parts[2]}`;
-        }
+      // Auto-set the date picker if we can parse the day from the data
+      if (parsedSchedule.length > 0 && parsedSchedule[0].day) {
+        // Try to parse "Friday March 13" style date
+        try {
+          const d = new Date(parsedSchedule[0].day + ' 2026');
+          if (!isNaN(d.getTime())) {
+            const iso = d.toISOString().split('T')[0];
+            targetDatePicker.value = iso;
+            const tabName = dateToTabName(iso);
+            document.getElementById('targetTabName').value = tabName;
+            targetTabPreview.textContent = tabName;
+          }
+        } catch {}
       }
 
       showPreview(parsedSchedule);
@@ -296,6 +303,18 @@ function showPreview(rows) {
     tr.querySelector('td').focus();
   });
 }
+
+// --- Target date picker ---
+const targetDatePicker = document.getElementById('targetDatePicker');
+const targetTabPreview = document.getElementById('targetTabPreview');
+
+targetDatePicker.addEventListener('change', () => {
+  const val = targetDatePicker.value;
+  if (!val) { targetTabPreview.textContent = ''; return; }
+  const tabName = dateToTabName(val);
+  document.getElementById('targetTabName').value = tabName;
+  targetTabPreview.textContent = tabName;
+});
 
 // --- Push to Sheet ---
 document.getElementById('btnPushToSheet').addEventListener('click', async () => {
