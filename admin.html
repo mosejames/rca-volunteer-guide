@@ -7,7 +7,93 @@
   <link rel="stylesheet" href="css/admin.css">
 </head>
 <body>
-  <div id="app"></div>
-  <script type="module" src="js/admin.js"></script>
+<div class="admin-container">
+
+  <div id="passwordGate" class="password-gate">
+    <h1>RCA Schedule Admin</h1>
+    <p style="color:var(--text-secondary);font-size:14px;">Enter admin password to continue</p>
+    <input type="password" id="passwordInput" placeholder="Password" autofocus>
+    <br>
+    <button class="btn" id="passwordSubmit">Enter</button>
+    <div id="passwordError" style="color:var(--error-red);font-size:13px;margin-top:10px;"></div>
+  </div>
+
+  <div id="adminHub" style="display:none;">
+    <h1>RCA Schedule Admin</h1>
+
+    <div class="hub-grid">
+      <div class="hub-card" data-action="pdf">
+        <div class="hub-card-icon">&#128196;</div>
+        <div class="hub-card-title">Upload PDF</div>
+        <div class="hub-card-desc">Parse a schedule PDF using AI</div>
+      </div>
+      <div class="hub-card" data-action="excel">
+        <div class="hub-card-icon">&#128202;</div>
+        <div class="hub-card-title">Upload Excel/CSV</div>
+        <div class="hub-card-desc">Import from a spreadsheet file</div>
+      </div>
+      <div class="hub-card" data-action="template">
+        <div class="hub-card-icon">&#128203;</div>
+        <div class="hub-card-title">Start from Template</div>
+        <div class="hub-card-desc">Create a new day from the template</div>
+      </div>
+    </div>
+
+    <div class="sheet-link">
+      Or <a id="sheetLink" href="#" target="_blank">open Google Sheet directly</a>
+    </div>
+
+    <div id="sectionPdf" class="admin-section">
+      <div class="back-link" data-back>&#8592; Back</div>
+      <h2>Upload Schedule PDF</h2>
+      <div class="upload-area" id="pdfDropZone">
+        <div class="upload-area-text">Drop PDF here or click to select</div>
+        <input type="file" id="pdfFileInput" accept=".pdf" style="display:none;">
+      </div>
+      <div id="pdfStatus"></div>
+    </div>
+
+    <div id="sectionExcel" class="admin-section">
+      <div class="back-link" data-back>&#8592; Back</div>
+      <h2>Upload Excel or CSV</h2>
+      <div class="upload-area" id="excelDropZone">
+        <div class="upload-area-text">Drop .xlsx or .csv file here or click to select</div>
+        <input type="file" id="excelFileInput" accept=".xlsx,.csv" style="display:none;">
+      </div>
+      <div id="excelStatus"></div>
+    </div>
+
+    <div id="sectionTemplate" class="admin-section">
+      <div class="back-link" data-back>&#8592; Back</div>
+      <h2>Create from Template</h2>
+      <p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px;">
+        This duplicates the TEMPLATE tab and renames it for the new date.
+      </p>
+      <div class="template-form">
+        <input type="text" id="templateTabName" placeholder="e.g. Thu Apr 10" style="width:180px;">
+        <button class="btn" id="templateCreate">Create</button>
+      </div>
+      <div id="templateStatus"></div>
+    </div>
+
+    <div id="sectionPreview" class="admin-section">
+      <div class="back-link" data-back>&#8592; Back</div>
+      <h2>Preview &amp; Edit</h2>
+      <p style="color:var(--text-secondary);font-size:14px;margin-bottom:12px;">
+        Review the parsed data. Click any cell to edit. Amber rows have unrecognized locations.
+      </p>
+      <div id="previewTableWrap"></div>
+      <div style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+        <button class="btn" id="btnPushToSheet">Push to Google Sheet</button>
+        <input type="text" id="targetTabName" placeholder="Tab name (e.g. Fri Mar 13)"
+               style="background:var(--card-bg);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);padding:10px 14px;font-size:14px;outline:none;">
+      </div>
+      <div id="pushStatus"></div>
+    </div>
+  </div>
+
+</div>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script type="module" src="js/admin.js"></script>
 </body>
 </html>
