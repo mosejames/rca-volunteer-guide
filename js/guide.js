@@ -419,6 +419,17 @@ letterPicker.addEventListener('click', (e) => {
   updateClock();
 });
 
+// Clear button
+document.getElementById('letterClear').addEventListener('click', () => {
+  letterPicker.querySelectorAll('.letter-btn.selected').forEach(b => b.classList.remove('selected'));
+  selectedLetters = [];
+  letterInput.value = '';
+  selectedDisplay.textContent = '';
+  localStorage.removeItem('rca_letters');
+  render();
+  updateClock();
+});
+
 viewToggleEl.addEventListener('click', () => {
   viewMode = viewMode === 'now' ? 'timeline' : 'now';
   viewToggleEl.textContent = viewMode === 'now' ? 'View full timeline' : 'Back to now view';
