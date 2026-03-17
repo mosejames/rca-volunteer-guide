@@ -173,168 +173,60 @@ The day name should match what's shown in the PDF header (e.g., "Friday March 13
 
 Return ONLY the JSON object. No explanation.`;
 
-// --- Sheet Write Handler ---
+// --- Sheet Write Handler (via Google Apps Script) ---
 async function handleWriteSheet(body, env) {
-  const { sheetId, tabName, rows, mode } = body;
+  const { tabName, rows, mode } = body;
   const customHeaders = body.headers || ['day', 'time_start', 'time_end', 'groups', 'location', 'note', 'flag'];
-  if (!sheetId || !tabName || !rows) {
-    return jsonResponse({ error: 'Missing sheetId, tabName, or rows' }, 400, env);
+  if (!tabName || !rows) {
+    return jsonResponse({ error: 'Missing tabName or rows' }, 400, env);
   }
 
-  const token = await getGoogleToken(env);
-
-  if (mode === 'replace') {
-    await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(tabName)}:clear`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({})
-      }
-    ).catch(() => {});
-  }
-
-  if (mode === 'append') {
-    const values = rows.map(r => customHeaders.map(h => r[h] || ''));
-    const writeResp = await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(tabName)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ values })
-      }
-    );
-    if (!writeResp.ok) {
-      const err = await writeResp.text();
-      throw new Error(`Sheets API error: ${writeResp.status} ${err}`);
-    }
-    return jsonResponse({ success: true, tabName }, 200, env);
-  }
-
-  const values = [customHeaders, ...rows.map(r => customHeaders.map(h => r[h] || ''))];
-
-  const writeResp = await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(tabName)}!A1?valueInputOption=RAW`,
-    {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ values })
-    }
-  );
-
-  if (!writeResp.ok) {
-    const err = await writeResp.text();
-    throw new Error(`Sheets API error: ${writeResp.status} ${err}`);
-  }
-
-  return jsonResponse({ success: true, tabName }, 200, env);
-}
-
-// --- Template Duplication Handler ---
-async function handleDuplicateTemplate(body, env) {
-  const { sheetId, newTabName } = body;
-  if (!sheetId || !newTabName) {
-    return jsonResponse({ error: 'Missing sheetId or newTabName' }, 400, env);
-  }
-
-  const token = await getGoogleToken(env);
-
-  const metaResp = await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=sheets.properties`,
-    { headers: { 'Authorization': `Bearer ${token}` } }
-  );
-  const meta = await metaResp.json();
-  const templateSheet = meta.sheets?.find(s => s.properties.title === 'TEMPLATE');
-
-  if (!templateSheet) {
-    return jsonResponse({ error: 'TEMPLATE tab not found in sheet' }, 404, env);
-  }
-
-  const dupResp = await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}:batchUpdate`,
-    {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        requests: [{
-          duplicateSheet: {
-            sourceSheetId: templateSheet.properties.sheetId,
-            newSheetName: newTabName,
-            insertSheetIndex: meta.sheets.length,
-          }
-        }]
-      })
-    }
-  );
-
-  if (!dupResp.ok) {
-    const err = await dupResp.text();
-    throw new Error(`Sheets API error: ${dupResp.status} ${err}`);
-  }
-
-  return jsonResponse({ success: true, tabName: newTabName }, 200, env);
-}
-
-// --- Google Auth (Service Account JWT) ---
-async function getGoogleToken(env) {
-  const serviceAccount = JSON.parse(env.GOOGLE_SERVICE_ACCOUNT_JSON);
-  const now = Math.floor(Date.now() / 1000);
-
-  const toBase64Url = (str) => btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-
-  const header = toBase64Url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
-  const claim = toBase64Url(JSON.stringify({
-    iss: serviceAccount.client_email,
-    scope: 'https://www.googleapis.com/auth/spreadsheets',
-    aud: 'https://oauth2.googleapis.com/token',
-    iat: now,
-    exp: now + 3600,
-  }));
-
-  const unsignedToken = `${header}.${claim}`;
-
-  const pemContents = serviceAccount.private_key
-    .replace(/-----BEGIN PRIVATE KEY-----/, '')
-    .replace(/-----END PRIVATE KEY-----/, '')
-    .replace(/\n/g, '');
-
-  const keyData = Uint8Array.from(atob(pemContents), c => c.charCodeAt(0));
-  const cryptoKey = await crypto.subtle.importKey(
-    'pkcs8', keyData,
-    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-    false, ['sign']
-  );
-
-  const signature = await crypto.subtle.sign(
-    'RSASSA-PKCS1-v1_5',
-    cryptoKey,
-    new TextEncoder().encode(unsignedToken)
-  );
-
-  const sig = btoa(String.fromCharCode(...new Uint8Array(signature)))
-    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-
-  const jwt = `${header}.${claim}.${sig}`;
-
-  const tokenResp = await fetch('https://oauth2.googleapis.com/token', {
+  const resp = await fetch(env.APPS_SCRIPT_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      action: 'write',
+      tabName,
+      rows,
+      headers: customHeaders,
+      mode: mode || 'replace'
+    }),
+    redirect: 'follow'
   });
 
-  const tokenData = await tokenResp.json();
-  if (!tokenData.access_token) throw new Error('Failed to get Google token');
-  return tokenData.access_token;
+  const text = await resp.text();
+  try {
+    const result = JSON.parse(text);
+    if (result.error) throw new Error(result.error);
+    return jsonResponse(result, 200, env);
+  } catch {
+    throw new Error(`Apps Script error: ${text.substring(0, 200)}`);
+  }
+}
+
+// --- Template Duplication Handler (via Google Apps Script) ---
+async function handleDuplicateTemplate(body, env) {
+  const { newTabName } = body;
+  if (!newTabName) {
+    return jsonResponse({ error: 'Missing newTabName' }, 400, env);
+  }
+
+  const resp = await fetch(env.APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      action: 'duplicate-template',
+      newTabName
+    }),
+    redirect: 'follow'
+  });
+
+  const text = await resp.text();
+  try {
+    const result = JSON.parse(text);
+    if (result.error) throw new Error(result.error);
+    return jsonResponse(result, 200, env);
+  } catch {
+    throw new Error(`Apps Script error: ${text.substring(0, 200)}`);
+  }
 }

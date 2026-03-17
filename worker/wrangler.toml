@@ -2,5 +2,9 @@ name = "rca-guide-worker"
 main = "index.js"
 compatibility_date = "2024-01-01"
 
+routes = [
+  { pattern = "rca-api.omgbooth.com/*", zone_name = "omgbooth.com" }
+]
+
 [vars]
-ALLOWED_ORIGIN = "https://YOUR_USERNAME.github.io"
+ALLOWED_ORIGIN = "https://mosejames.github.io"
