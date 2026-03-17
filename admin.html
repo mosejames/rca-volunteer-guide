@@ -70,9 +70,11 @@
         This duplicates the TEMPLATE tab and renames it for the new date.
       </p>
       <div class="template-form">
-        <input type="text" id="templateTabName" placeholder="e.g. Thu Apr 10" style="width:180px;">
+        <input type="date" id="templateDatePicker" style="width:180px;">
+        <span id="templateTabPreview" style="color:var(--text-muted);font-size:13px;"></span>
         <button class="btn" id="templateCreate">Create</button>
       </div>
+      <input type="hidden" id="templateTabName">
       <div id="templateStatus"></div>
     </div>
 

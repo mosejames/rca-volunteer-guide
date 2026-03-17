@@ -179,12 +179,30 @@ async function handleExcelUpload(file) {
 }
 
 // --- Template ---
+const templateDatePicker = document.getElementById('templateDatePicker');
+const templateTabPreview = document.getElementById('templateTabPreview');
+
+templateDatePicker.addEventListener('change', () => {
+  const val = templateDatePicker.value;
+  if (!val) { templateTabPreview.textContent = ''; return; }
+  const tabName = dateToTabName(val);
+  document.getElementById('templateTabName').value = tabName;
+  templateTabPreview.textContent = tabName;
+});
+
+function dateToTabName(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${days[d.getDay()]} ${months[d.getMonth()]} ${d.getDate()}`;
+}
+
 document.getElementById('templateCreate').addEventListener('click', async () => {
   const tabName = document.getElementById('templateTabName').value.trim();
   const status = document.getElementById('templateStatus');
 
   if (!tabName) {
-    status.innerHTML = '<div class="status-msg status-error">Enter a tab name</div>';
+    status.innerHTML = '<div class="status-msg status-error">Pick a date</div>';
     return;
   }
 
