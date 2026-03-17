@@ -7,7 +7,37 @@
   <link rel="stylesheet" href="css/guide.css">
 </head>
 <body>
-  <div id="app"></div>
+
+  <div class="top-bar">
+    <input type="text" class="letter-input" id="letterInput"
+           placeholder="A-L" maxlength="12" autocomplete="off" autocapitalize="characters">
+    <span class="sync-status" id="syncStatus">Loading...</span>
+    <button class="btn-refresh" id="btnRefresh" aria-label="Refresh">&#x21bb;</button>
+    <button class="btn-print" id="btnPrint" aria-label="Print">&#x1F5A8;</button>
+  </div>
+
+  <div id="bannerArea"></div>
+
+  <div class="day-toggle" id="dayToggle" style="display:none;"></div>
+
+  <div class="print-watermark">Do not share with visitors</div>
+
+  <div class="hero-section" id="heroSection"></div>
+
+  <div class="view-toggle" id="viewToggle" style="display:none;">View full timeline</div>
+
+  <div class="lookup-link" id="lookupToggle">Look up any group</div>
+  <div class="lookup-panel" id="lookupPanel">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span style="font-size:13px;color:var(--text-secondary);">Where is group</span>
+      <input type="text" class="lookup-input" id="lookupInput" maxlength="1" autocapitalize="characters">
+      <span style="font-size:13px;color:var(--text-secondary);">right now?</span>
+    </div>
+    <div class="lookup-result" id="lookupResult"></div>
+  </div>
+
+  <div class="timeline" id="timeline" style="display:none;"></div>
+
   <script type="module" src="js/guide.js"></script>
 </body>
 </html>
